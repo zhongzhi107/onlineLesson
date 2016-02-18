@@ -17,9 +17,12 @@
   </div>
   <!-- <audio autoplay="autoplay" /> -->
   <script type="text/javascript">
-    var ds = deepstream('localhost:6020').login(),
-      record = ds.record.getRecord('someUser'),
-      input = document.getElementById('text');
+    var ds = deepstream('localhost:6020').login();
+    // ds.on('error', function(e) {
+    //   console.error('======', e);
+    // });
+    var record = ds.record.getRecord('someUser');
+    var input = document.getElementById('text');
 
     input.onkeyup = function() {
       record.set( 'firstname', input.value );
