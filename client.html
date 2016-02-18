@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #canvas {
+      background: #000;
+    }
+  </style>
+  <script type="text/javascript" src="bower_components/deepstream.io-client-js/dist/deepstream.js"></script>
+</head>
+<body>
+  <input id="text" type="text" />
+  <input id="stroke-color" type="color" value="#ffffff" />
+  <input id="stroke-width" type="number" value="2" />
+  <div>
+    <canvas id="canvas" width="600" height="400" />
+  </div>
+  <!-- <audio autoplay="autoplay" /> -->
+  <script type="text/javascript">
+    var ds = deepstream('localhost:6020').login(),
+      record = ds.record.getRecord('someUser'),
+      input = document.getElementById('text');
+
+    input.onkeyup = function() {
+      record.set( 'firstname', input.value );
+    };
+
+    record.subscribe( 'firstname', function( value ){
+      input.value = value;
+    });
+
+    var isDrawing = false;
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    canvas.addEventListener('mousemove', function(e) {
+      if (isDrawing) {
+        var strokeColor = document.getElementById('stroke-color').value;
+        var strokeWidth = document.getElementById('stroke-width').value;
+        record.set('draw', ['l', e.offsetX, e.offsetY, strokeColor, strokeWidth]);
+      }
+    }, false);
+
+    canvas.addEventListener('mousedown', function(e) {
+      record.set('draw', ['m', e.offsetX, e.offsetY]);
+      isDrawing = true;
+    }, false);
+
+    canvas.addEventListener('mouseup', function(e) {
+      isDrawing = false;
+    }, false);
+
+    canvas.addEventListener('mouseout', function(e) {
+      isDrawing = false;
+    }, false);
+
+    record.subscribe('draw', function(value) {
+      console.log(value);
+      switch (value[0]) {
+        case 'l':
+          ctx.lineTo(value[1], value[2]);
+          ctx.stroke();
+          ctx.strokeStyle = value[3];
+          ctx.lineWidth = value[4];
+          break;
+        case 'm':
+          ctx.beginPath();
+          ctx.moveTo(value[1], value[2]);
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
